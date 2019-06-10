@@ -1,0 +1,441 @@
+============================================
+vis/LOG
+13:48:07_Wednesday_05_October_2016
+============================================
+Beginning tests for tangf1 at Wed Oct  5 13:48:03 AEDT 2016
+
+==========
+SelectHand.java not submitted
+Not testing SelectHand
+
+==========
+compiling HandValue.java
+Testing HandValue:
+                    01) java HandValue ...cards...  PASS  100
+                    02) java HandValue ...cards...  PASS  100
+                    03) java HandValue ...cards...  PASS  100
+                    04) java HandValue ...cards...  PASS  100
+                    05) java HandValue ...cards...  PASS  100
+                    06) java HandValue ...cards...  PASS  100
+                    07) java HandValue ...cards...  PASS  100
+                    08) java HandValue ...cards...  PASS  100
+                    09) java HandValue ...cards...  PASS  100
+                    10) java HandValue ...cards...  PASS  100
+                    11) java HandValue ...cards...  PASS  100
+                    12) java HandValue ...cards...  PASS  100
+                    13) java HandValue ...cards...  PASS  100
+                    14) java HandValue ...cards...  PASS  100
+                    15) java HandValue ...cards...  PASS  100
+                    16) java HandValue ...cards...  PASS  100
+                    17) java HandValue ...cards...  PASS  100
+                    18) java HandValue ...cards...  PASS  100
+                    19) java HandValue ...cards...  PASS  100
+                    20) java HandValue ...cards...  PASS  100
+                    21) java HandValue ...cards...  PASS  100
+                    22) java HandValue ...cards...  PASS  100
+                    23) java HandValue ...cards...  PASS  100
+                    24) java HandValue ...cards...  PASS  100
+                    25) java HandValue ...cards...  PASS  100
+                    26) java HandValue ...cards...  PASS  100
+                    27) java HandValue ...cards...  PASS  100
+                    28) java HandValue ...cards...  PASS  100
+                    29) java HandValue ...cards...  PASS  100
+                    30) java HandValue ...cards...  PASS  100
+                    31) java HandValue ...cards...  PASS  100
+                    32) java HandValue ...cards...  PASS  100
+                    33) java HandValue ...cards...  PASS  100
+                    34) java HandValue ...cards...  PASS  100
+                    35) java HandValue ...cards...  PASS  100
+                    36) java HandValue ...cards...  PASS  100
+                    37) java HandValue ...cards...  PASS  100
+                    38) java HandValue ...cards...  PASS  100
+                    39) java HandValue ...cards...  PASS  100
+                    40) java HandValue ...cards...  PASS  100
+                    41) java HandValue ...cards...  PASS  100
+                    42) java HandValue ...cards...  PASS  100
+                    43) java HandValue ...cards...  PASS  100
+                    44) java HandValue ...cards...  PASS  100
+                    45) java HandValue ...cards...  PASS  100
+                    46) java HandValue ...cards...  PASS  100
+                    47) java HandValue ...cards...  PASS  100
+                    48) java HandValue ...cards...  PASS  100
+                    49) java HandValue ...cards...  PASS  100
+                    50) java HandValue ...cards...  PASS  100
+
+Total HandValue score  : 5000 / 5000
+
+Final score for project correctness:  100%
+
+Testing completed Wed Oct  5 13:48:07 AEDT 2016
+============================================
+src/HandValue.java
+13:48:02_Wednesday_05_October_2016
+============================================
+/** 
+  * File	      :	HandValue.java
+  * Related files : CribbageRank.java
+  * 				Combinations.java
+  * Author	      :	Tang Tang
+  * Project	      :	The Game of Cribbage
+  * Purpose	      :	Compute the total number of points the hand of four cards
+  *				    plus one start card would score according to five rules --
+  *				    15s, Pairs, Runs, Flushes and "One for his nob".
+  * Approach      :	Compute points that are scored according to the five rules
+  * 			    respectively and then all of these points are totaled to
+  * 			    find the value of a hand.
+  * 				Flushes and "one for his nob" need to consider about suits;
+  * 				15s, Pairs and Runs only need to consider about ranks, as
+  * 				well as combinations of the ranks.
+  */
+
+import java.util.Arrays;
+
+public class HandValue {
+	
+	/** Receive 5 cards on the command line and
+	  * print out the number of points the hand would score.
+	  * A full hand consists of five cards, as the start card
+	  * is considered as part of a hand.
+	  */
+	public static void main(String[] args) {
+		String card1 = args[0].toUpperCase();
+		String card2 = args[1].toUpperCase();
+		String card3 = args[2].toUpperCase();
+		String card4 = args[3].toUpperCase();
+		String startCard = args[4].toUpperCase();
+		String[] hand = {card1, card2, card3, card4};
+		String[] fullHand = {card1, card2, card3, card4, startCard};
+		
+		HandValue handValue = new HandValue();
+		int valueOfHand = handValue.totalPoint(hand, startCard, fullHand);
+		System.out.println(valueOfHand);
+	}
+	
+	/** Total points
+	  * Points scored following the five rules below are totaled
+	  * to find the value of a hand.
+	  */
+	public int totalPoint(String[] hand, String startCard, String[] fullHand) {
+		int total = 0;
+		total = fifteens(fullHand) + pairs(fullHand) + runs(fullHand) + 
+				flushes(hand, startCard) + nob(hand, startCard);
+		return total;
+	}
+	
+	/** Rule1 -- 15s
+	  * 2 points are scored for each distinct combinations of cards that add to 15.
+	  * An ace is counted as 1; a jack, queen or king is counted as 10;
+	  * and other cards are counted as their face value.
+	  */
+	public int fifteens(String[] fullHand) {
+		int fifteenScore = 0;
+		String[][] combos = Combinations.combinations(fullHand);
+		for(String[] combo : combos) {
+			int total = 0;
+			for(int i = 0; i < combo.length; i++) {
+				CribbageRank rank = CribbageRank.findByAbbr(getRank(combo[i]));
+				total += CribbageRank.valueOf(rank).faceValue();
+			}
+			if(total == 15) {
+				fifteenScore += 2;
+			}
+		}
+		return fifteenScore;
+	}
+	
+	/** Rule2 -- Pairs
+	  * 2 points are scored for each pair.
+	  */
+	public int pairs(String[] fullHand) {
+		int pairScore = 0;
+		for(int i = 0; i < fullHand.length-1; i++) {
+			for(int j = i+1; j < fullHand.length; j++) {
+				if(getRank(fullHand[i]).equals(getRank(fullHand[j]))) {
+					pairScore += 2;
+				}
+			}
+		}
+		return pairScore;
+	}
+	
+	/**Rule3 -- Runs
+	  * 1 point is scored for each card in a run of 3 or more consecutive
+	  * cards (the suits of these cards need not to be the same).
+	  */
+	public int runs(String[] fullHand) {
+		int runScore = 0;
+		//Create an array consisting of rank orders converted from the
+		//array of five cards.
+		int[] rankOrder = new int[fullHand.length];
+		for(int i = 0; i < fullHand.length; i++) {
+			CribbageRank rank = CribbageRank.findByAbbr(getRank(fullHand[i]));
+			rankOrder[i] = CribbageRank.valueOf(rank).ordinal();
+		}
+		int[][] combos = Combinations.combinations(rankOrder);
+		for(int[] combo : combos) {
+			//A run consists of 3 or more consecutive cards.
+			if(isConsecutive(combo) && combo.length >= 3) {
+				//Find the max length among combinations of cards.
+				 runScore = Math.max(runScore, combo.length);
+			}
+		}
+		//The number of pairs in a hand can be calculated
+		//according to the pairScore.
+		int pairNum = pairs(fullHand)/2;
+		//When there are 1 or 2 pairs in a hand, the runScore will be
+		//multiply by pairScore.
+		if(pairNum == 1 || pairNum == 2) {
+			runScore *= pairs(fullHand);
+			//When there are 3 pairs in a hand, the runScore will be
+			//multiply by pairNum.
+		} else if(pairNum == 3) {
+			runScore *= pairNum;
+		}
+		return runScore;
+	}
+	
+	/** Rule4 -- Flushes
+	  * 4 points are scored if all the cards in the hand are of the same suit.
+	  * 1 further point is scored if the start card is also the same suit.
+	  */
+	public int flushes(String[] hand, String startCard) {
+		int flushScore = 0;
+		boolean handFlush = true;
+		boolean fullFlush = false;
+		for(int i = 0; i < hand.length-1; i++) {
+			if(!(getSuit(hand[i]).equals(getSuit(hand[i+1])))) {
+				handFlush = false;
+			}
+		}
+		if(handFlush) {
+			if(getSuit(hand[0]).equals(getSuit(startCard))) {
+				fullFlush = true;
+			}
+		}
+		if(fullFlush) {
+			flushScore = 5;
+		} else if(handFlush) {
+			flushScore = 4;
+		}
+		return flushScore;
+	}
+	
+	/** Rule5 -- "One for his nob"
+	  * 1 point is scored if the hand contains the Jack 
+	  * of the same suit as the start card.
+	  */
+	public int nob(String[] hand, String startCard) {
+		int nobScore = 0;
+		for(int i = 0; i < hand.length; i++) {
+			if(getRank(hand[i]).equals("J") && 
+					getSuit(hand[i]).equals(getSuit(startCard))) {
+				nobScore = 1;
+			}
+		}
+		return nobScore;
+	}
+	
+	/** Get the rank of a card from a two-character string. */
+	public String getRank(String card) {
+		char Rank = card.charAt(0);
+		String rank = Character.toString(Rank);
+		return rank;
+	}
+	
+	/** Get the suit of a card from a two-character string. */
+	public String getSuit(String card) {
+		char Suit = card.charAt(1);
+		String suit = Character.toString(Suit);
+		return suit;
+	}
+	
+	/** Check if cards in the array are consecutive.
+	  * The array will be sorted in rank order (Ace up to King).
+	  */
+	public boolean isConsecutive(int[] rankOrder) {
+		Arrays.sort(rankOrder);
+		for(int i = 0; i < rankOrder.length-1; i++) {
+			if(rankOrder[i+1] - rankOrder[i] != 1) {
+				return false;
+			}
+		}
+		return true;
+	}
+}============================================
+src/CribbageRank.java
+13:48:02_Wednesday_05_October_2016
+============================================
+/** A playing card rank type designed for cribbage. It supports a single-
+ *  character abbreviation for each rank, as well as providing the face
+ *  value of a rank (ACE=1, KING, QUEEN, and JACK=10, other ranks are their
+ *  face value), needed for counting 15s in a cribbage hand. Also provides
+ *  methods to get the next smaller and larger rank of a given rank, as well
+ *  as the method to get cribbage rank according to its abbreviation.
+ *
+ *  @author Peter Schachte schachte@unimelb.edu.au
+ * 		    Tang Tang
+ */
+
+public enum CribbageRank {
+        ACE('A'),
+        TWO('2'),
+        THREE('3'),
+        FOUR('4'),
+        FIVE('5'),
+        SIX('6'),
+        SEVEN('7'),
+        EIGHT('8'),
+        NINE('9'),
+        TEN('T'),
+        JACK('J'),
+        QUEEN('Q'),
+        KING('K');
+
+        /** Single character abbreviation used to briefly print the rank. */
+        private final char abbrev;
+
+        /** @return the single-character abbreviation for this rank. */
+        public char abbrev() {
+            return abbrev;
+        }
+        
+        /** @return the rank according to the single-character abbreviation. */
+        public static CribbageRank findByAbbr(String abbr) {
+            for(CribbageRank rank : values()) {
+            	char Rank = rank.abbrev();
+            	String abbrRank = Character.toString(Rank);
+                if(abbrRank.equals(abbr)) {
+                    return rank;
+                }
+            }
+            return null;
+        }
+
+        /** @return the face value of the rank for counting 15's in cribbage
+         *  (ACE=1, KING, QUEEN, and JACK=10, other ranks are their face value).
+         */
+        public int faceValue() {
+            return Math.min(this.ordinal()+1, 10);
+        }
+
+        /** @return the next higher rank. */
+        public CribbageRank nextHigher() {
+            int value = this.ordinal() + 1;
+            return value >= values().length ? null : values()[value];
+        }
+
+        /** @return the next lower rank. */
+        public CribbageRank nextLower() {
+            int value = this.ordinal() - 1;
+            return value < 0 ? null : values()[value];
+        }
+        
+        /** Construct a rank.
+         *  @param abbrev the single-character abbreviation for this rank.
+         */
+        CribbageRank(char abbrev) {
+            this.abbrev = abbrev;
+        }
+        
+        /** @return the rank as a single-character string. */
+        @Override
+        public String toString() {
+            return Character.toString(abbrev);
+        }
+        
+        /** @return the enum constant with the specified name. */
+		public static CribbageRank valueOf(CribbageRank rank) {
+			return rank;
+		}
+}
+============================================
+src/Combinations.java
+13:48:02_Wednesday_05_October_2016
+============================================
+/** This class provides a single static method to compute all
+ *  combinations of objects in the input. It also provides a main
+ *  method for experimentation.
+ *
+ *  @author Peter Schachte <schachte@unimelb.edu.au>
+ * 		    Tang Tang
+ */
+
+import java.lang.reflect.Array;
+
+public class Combinations {
+
+    /** This method computes all the combinations of objects from the
+     *  input array. If the input array has n elements, the output array
+     *  has 2^n arrays, each containing from 0 to n elements taken from the
+     *  input array. Elements in the output arrays are included in the order
+     *  they appear in the input array. Specifically, element i of the
+     *  output array contains element j of the input array if i / 2^j is
+     *  odd, where / is integer division rounding down, so element 0 of the
+     *  result is empty and element 2^n - 1 of the result has all the
+     *  elements of the input.
+     *
+     *  @param <T> the type of the array elements
+     *  @param list an array of the elements to compute the combinations of
+     *  @return an array of the "subarrays" of the input
+     *
+     *  @see <a href="http://en.wikipedia.org/wiki/Combination">
+     *       the wikipedia page for combinations</a>
+     */
+@SuppressWarnings({"unchecked"})
+    public static <T> T[][] combinations(T[] list) {
+        T[][] combos = (T[][])Array.newInstance(list.getClass(), 
+                (int) Math.pow(2, list.length));
+        
+        for (int i = 0 ; i < combos.length ; ++i) {
+            int count = 0;
+            for (int j = 0 ; j < list.length ; ++j) {
+                if ((i & 1<<j) != 0) ++count;
+            }
+            combos[i] = (T[])Array.newInstance(list.getClass().getComponentType(), count);
+            count = 0;
+            for (int j = 0 ; j < list.length ; ++j) {
+                if ((i & 1<<j) != 0) {
+                    combos[i][count] = list[j];
+                    ++count;
+                }
+            }
+        }
+        return combos;
+    }
+
+public static int[][] combinations(int[] rankOrder) {
+		int[][] combos = (int[][])Array.newInstance(rankOrder.getClass(), 
+                (int) Math.pow(2, rankOrder.length));
+        
+        for (int i = 0 ; i < combos.length ; ++i) {
+            int count = 0;
+            for (int j = 0 ; j < rankOrder.length ; ++j) {
+                if ((i & 1<<j) != 0) ++count;
+            }
+            combos[i] = (int[])Array.newInstance(rankOrder.getClass().getComponentType(), count);
+            count = 0;
+            for (int j = 0 ; j < rankOrder.length ; ++j) {
+                if ((i & 1<<j) != 0) {
+                    combos[i][count] = rankOrder[j];
+                    ++count;
+                }
+            }
+        }
+        return combos;
+	}
+    
+    /** A simple main method to allow experimentation with this
+     *  method. It simply prints out all the combinations of the
+     *  command line arguments, one per line.
+     
+    public static void main(String[] args) {
+        String[][] lines = Combinations.combinations(args);
+      for (String[] line : lines) {
+            for (String str : line) {
+                System.out.print(str + " ");
+           }
+            System.out.println();
+        }
+    }
+	 */
+}
